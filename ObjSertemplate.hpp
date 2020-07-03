@@ -10,7 +10,10 @@
 #include <set>
 #include <map>
 #include <string>
+#include <typeinfo>
 using namespace std;
+
+namespace binary_ser{
 
 class FileOp
 {//this is a class of file operation
@@ -19,6 +22,56 @@ public:
     virtual std::ostream& write(std::ostream& ostr) = 0;
     virtual std::istream& read(std::istream& istr) = 0;
 };
+
+static inline bool LE();
+static inline ostream& write(ostream& outfile,FileOp* f);
+static inline ostream& write_internal(ostream& outfile,const char* p,uint32_t size);
+static inline ostream& write_string(ostream& outfile, const std::string& str);
+template<typename T>
+static inline ostream& write(ostream& outfile, T& t);
+template <class T>
+static inline ostream& write(ostream& outfile,vector<T>& container);
+template <class T>
+static inline ostream& write(ostream& outfile, list<T>& container);
+template <class T>
+static inline ostream& write(ostream& outfile, set<T>& container);
+template<class K, class V>
+static inline ostream& write(ostream& outfile, map<K,V>& container);
+template<class ElementType>
+void serialize(ElementType a,std::string fileName);
+template<class T>
+void serialize(vector<T>& container,std::string fileName);
+template<class T>
+void serialize(list<T>& container,std::string fileName);
+template <class T>
+static inline ostream& write(ostream& outfile, set<T>& container);
+template<class K,class V>
+void serialize(map<K,V>& container, std::string fileName);
+static inline istream& read(istream& infile,FileOp* f);
+static inline istream& read_string(istream& infile,std::string str);
+static inline istream& read_internal(istream& infile, char* p, uint32_t size);
+template <class T>
+static inline istream& read(istream& infile, T& t);
+template<class T>
+static inline istream& read(istream& infile,vector<T>& container);
+template<class T>
+static inline istream& read(istream& infile,list<T>& container);
+template<class T>
+static inline istream& read(istream& infile,set<T>& container);
+template<class K,class V>
+static inline istream& read(istream& infile,map<K,V>& container);
+template<class ElementType>
+ElementType deserialize(ElementType &a,std::string fileName);
+template<class T>
+void deserialize(vector<T>& container,std::string fileName);
+template<class T>
+void deserialize(list<T>& container,std::string fileName);
+template<class T>
+void deserialize(set<T>& container,std::string fileName);
+template<class K,class V>
+void deserialize(map<K,V>& container,std::string fileName);
+
+
 
 
 //the 2 function below is the 1st version testing, not play a 
@@ -32,7 +85,6 @@ void ser(elet a)
     str.write((char*)(&a), sizeof(a));
     str.close();
 }
-
 template<typename elet>
 elet deser()
 {
@@ -43,17 +95,21 @@ elet deser()
     str.close();
     return a;
 }
+//------------------------------------------------------------------
 
-//this function is here for a test of alignment
-//whether your computer use little endian, or big endian in your computer's memory system
+
 static inline bool LE(){
+    //this function is here for a test of alignment
+    //whether your computer use little endian, or big endian in your computer's memory system
     //we assume all variable are stored in the same endian
     //so we need only test the storage of variable integer "1";
     const static int n = 1;
     const static bool le = (*(char*)&n == 1);//test whether a little endian 
     return le;
 }
-
+static inline ostream& write(ostream& outfile,FileOp* f){//thid write is used to make the other writes usable.
+    return f->write(outfile);
+}
 static inline ostream& write_internal(ostream& outfile,const char* p,uint32_t size){
     //this function write data in the outfile via a char pointer p
     if(!LE()){
@@ -69,10 +125,25 @@ static inline ostream& write_internal(ostream& outfile,const char* p,uint32_t si
     }
     return outfile;   
 }
+static inline ostream& write(ostream& outfile, const std::string& str){
+    uint32_t size = str.size();
 
+    write (outfile,size);
+
+    write_internal (outfile, str.c_str(), str.size());
+
+    return outfile;
+}
+static inline ostream& write(ostream& outfile,std::string& str){
+    uint32_t size = str.size();
+
+    write(outfile,size);
+    write_internal(outfile,str.c_str(),str.size());
+
+    return outfile;
+}
 //below we show all the write functions, for fundamental type and cpp STL container pair、 vector、list、set、map
 //-------------------------------------------
-
 template<typename T>
 static inline ostream& write(ostream& outfile, T& t){
     //this function write a Type t variable to the output file
@@ -83,13 +154,19 @@ static inline ostream& write(ostream& outfile, T& t){
         return write_internal(outfile,(const char*)& t, sizeof(t));
     }else
     {
+        /*std::string str;
+        cout << typeid(t).name() << "\n" << endl;
+        cout << typeid(str).name() << "\n" << endl;
+        if(typeid(t).name() == typeid(str).name()){
+            write_string(outfile,t);
+            return outfile;
+        }*/
         //if want a implememtation of user_define type just add code here
         cout << "sorry, we do not support non_fundamental STL container type\n"<<endl;
         cout << "if continue , there may be bugs\n" << endl;
         return write_internal(outfile,(const char*)& t, sizeof(t));
     }    
 }
-
 //vector//////////////////////////////////////////////////
 template <class T>
 static inline ostream& write(ostream& outfile,vector<T>& container){
@@ -101,7 +178,7 @@ static inline ostream& write(ostream& outfile,vector<T>& container){
 
     //then we do a loop to write every element in the vector;
     for (auto& ite: container)
-    {
+    {   
         write(outfile,ite);
     }
     return outfile;
@@ -157,6 +234,7 @@ static inline ostream& write(ostream& outfile, map<K,V>& container){
     }
     return outfile;
 }
+
 
 
 //-------------------------------------------------------
@@ -230,7 +308,17 @@ void serialize(map<K,V>& container, std::string fileName){
 //-------------------------------------------------------------
 //end showing ser functions
 
+static inline istream& read(istream& infile,FileOp* f){//this write is used to make the other writes usable.
+    return f->read(infile);
+}
+static inline istream& read(istream& infile,std::string& str){
+    int size = 0;
+    read(infile,size);
+    str.resize(size);
+    read_internal(infile, const_cast<char*> (str.c_str()),size);
 
+    return infile;
+}
 static inline istream& read_internal(istream& infile, char* p, uint32_t size){
     //this function read data in the outfile via a char pointer p
     //very similar as write_internal function as above; we do not comment it  then
@@ -251,6 +339,7 @@ static inline istream& read_internal(istream& infile, char* p, uint32_t size){
 //below we show all the read functions, for fundamental type and cpp STL container pair、 vector、list、set、map
 //------------------------------------------------------------------------------
 
+
 template<class T>
 static inline istream& read(istream& infile, T& t){
 //this function read a Type t variable from the input file
@@ -259,12 +348,18 @@ static inline istream& read(istream& infile, T& t){
         return read_internal(infile,(char*)& t, sizeof(t));
     }else
     {
+        /*std::string str;
+        cout << typeid(t).name() << "\n" << endl;
+        cout << typeid(str).name() << "\n" << endl;
+        if(typeid(t).name() == typeid(str).name()){
+            read_string(infile,t);
+            return infile;
+        }*/
         //if want a implememtation of user_define type just add code here
         cout << "Sorry we do not support non_fundamental_type STL_container " << endl;
     }
     return infile;
 }
-
 //vector////////////////////////////////////////////////////
 template<class T>
 static inline istream& read(istream& infile,vector<T>& container){
@@ -450,11 +545,8 @@ void deserialize(map<K,V>& container, std::string fileName){
 //-------------------------------------------------------------
 //end showing deser functions
 
-
-
-
-
-
+};
+namespace xml_ser{
 template<class ElementType>
 void serialize_xml(ElementType a,std::string stltype,std::string fileName){
 
@@ -463,4 +555,5 @@ void serialize_xml(ElementType a,std::string stltype,std::string fileName){
 template<class ElementType>
 void deserialize_xml(ElementType a,std::string stltype,std::string fileName){
 
+}
 }
