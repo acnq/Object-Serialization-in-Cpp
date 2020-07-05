@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLUSER>
+    <User Name="liangbaikai" Password="bbbbbb">
+        <Gender>man</Gender>
+        <Age>10000</Age>
+        <Mobile>188****8888</Mobile>
+        <Email>1157***657@qq.com</Email>
+    </User>
+    <User Name="Wenbaikai" Password="aaaaa">
+        <Mobile>166****8888</Mobile>
+    </User>
+</XMLUSER>
