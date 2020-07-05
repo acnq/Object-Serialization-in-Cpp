@@ -1,0 +1,9 @@
+﻿  testor.cpp
+  class any is only available with C++17 or later.
+d:\aauniversitytasks\csc++\course\bigpro\objserialization2\project1\project1\testor.cpp(18): warning C4311: “类型强制转换”: 从“int *”到“uint32_t”的指针截断
+d:\aauniversitytasks\csc++\course\bigpro\objserialization2\project1\project1\testor.cpp(18): warning C4302: “类型强制转换”: 从“int *”到“uint32_t”截断
+d:\aauniversitytasks\csc++\course\bigpro\objserialization2\project1\project1\testor.cpp(19): warning C4311: “类型强制转换”: 从“double *”到“uint32_t”的指针截断
+d:\aauniversitytasks\csc++\course\bigpro\objserialization2\project1\project1\testor.cpp(19): warning C4302: “类型强制转换”: 从“double *”到“uint32_t”截断
+  serialization.cpp
+  正在生成代码...
+  Project1.vcxproj -> D:\AAuniversityTasks\CSC++\course\bigPro\ObjSerialization2\Project1\x64\Debug\Project1.exe

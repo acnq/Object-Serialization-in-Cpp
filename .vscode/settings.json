@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "*.json": "bat",
+        "*.c": "c",
+        "string.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "main.h": "c",
+        "*.tcc": "cpp",
+        "ostream": "cpp"
+    }
+}
